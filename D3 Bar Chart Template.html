@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+
+  <style>
+
+    svg {
+      background-color: lightgrey;
+    }
+
+    .bar{
+      fill: steelblue;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    .bar:hover {
+      fill: blue;
+    }
+
+    .label {
+      font-size: 15px;
+      text-anchor: middle;
+    }
+
+    .tooltip {
+      font-weight: bold;
+      position: absolute; 
+      background-color: white;
+      border: solid;
+      border-width: 2px;
+      border-radius: 5px;
+    }
+  </style>
+
+</head>
+<body>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <svg></svg>
+  <script>
+
+
+//set globals
+let data = [0.3, 1, 2,3,4,5, 9, 5.2, 1, 3, 4.7];
+const w = 800;
+const h = 300;
+const margin = 40;
+
+//create svg area
+const svg = d3.select("svg")
+              .attr("width", w)
+              .attr("height", h)
+
+//define scales scalebound for ordinal data, scalelinear for quantitative continues data
+const xScale = d3.scaleBand()
+                 .domain(d3.range(data.length)) //inputs / axis description
+                 .range([0, w - (2 * margin)]) //outputs / axis size
+
+const yScale = d3.scaleLinear()
+                 .domain([0, d3.max(data)])
+                 .range([h - (2 * margin), 0])
+                 
+//plot the data to the svg area
+                svg.append("g")
+                   .attr("transform", 'translate('+ margin +','+ margin +')') //add margins to svg area 
+                   .selectAll("rect")
+                   .data(data)
+                   .enter()
+                   .append("rect")
+                   .attr("margin", "10px")
+                   .attr("x", (d, i) => {return xScale(i)}) //set to ordinals
+                   .attr("y", (d, i) => {return  yScale(d)}) //y plotting data must match yScale formula
+                   .attr("width", xScale.bandwidth() -5) //automatically set width (-5 to get a gap)
+                   .attr("height", (d, i) => {return h - (2 * margin) -yScale(d)})
+                   .attr("class", "bar")
+//spawning and placement of tooltips
+                   .on("mouseover", function( d) {
+                       
+                       tooltip.transition()		
+                              .duration(200)		
+                              .style("opacity", .9)	
+             })
+                   .on("mousemove", function(event, d) {
+                      const[x, y] = d3.pointer(event);		//get cooredinants of mouse
+                      tooltip.html(`<p>Rainfall: ${d} mm</p>`)	
+                              .style("left", (x + 30) + "px")		
+                              .style("top", (y - 10) + "px");	
+            })					
+                     
+                 .on("mouseout", function(d) {		
+                      tooltip.transition()		
+                             .duration(200)		
+                             .style("opacity", 0);	
+            })
+
+        //create tooltip
+        const tooltip = d3.select("body").append("div")
+                     .attr("class", "tooltip")
+                     .style("opacity", 0)
+                               
+//plot the axis
+                svg.append("g")
+                   .attr("transform", `translate(${margin}, ${h - margin} )`)
+                   .call(d3.axisBottom(xScale))
+
+                svg.append("g")
+                   .attr("transform", `translate(${margin}, ${margin})`)
+                   .call(d3.axisLeft(yScale))
+
+//axis labels
+
+                svg.append("text")      // text label for the x axis
+                   .attr("x", w / 2)
+                   .attr("y",  h - margin  + (margin/1.25))
+                   .attr("class", "label")
+                   .text("Preceding hour");
+
+                svg.append("text")  //text label for y axis
+                   .attr("transform", "rotate(-90)")
+                   .attr("y", 0)
+                   .attr("x", 0 - (h / 2))
+                   .attr("dy", "1em")
+                   .attr("class", "label")
+                   .text("Rainfall /mm");
+    
+  </script>
+</body>
+</html>
